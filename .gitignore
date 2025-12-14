@@ -1,0 +1,12 @@
+# IDE Settings
+.idea/
+.vscode/
+
+# Python Compiled Files
+__pycache__/
+*.pyc
+.venv
+
+# Local Game Data (don't commit your save files!)
+game_save.bin
+game_history.txt
