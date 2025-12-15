@@ -129,9 +129,9 @@ class Renderer:
         # Simple overlay for history
         self.pen.clear()
         self.pen.penup()
-        self.pen.goto(0, 200)
+        self.pen.goto(0, 250)
         self.pen.write("Match History (Click to return)", align="center", font=("Arial", 16, "bold"))
-        self.pen.goto(0, 100)
+        self.pen.goto(0,50)
         self.pen.write(text, align="center", font=("Courier", 10, "normal"))
         self.screen.update()
 

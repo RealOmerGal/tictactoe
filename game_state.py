@@ -4,7 +4,9 @@ from storage import StorageManager
 import config
 
 
+
 class GameState:
+
     def __init__(self):
         self.reset()
 
@@ -13,8 +15,8 @@ class GameState:
         self.current_turn = "X"
         self.game_over = False
         self.winner = None
-        self.p1_name = "Player 1"
-        self.p2_name = "Player 2"
+        self.p1_name = None
+        self.p2_name = None
         self.mode = config.MODE_PVP  # Default
 
     def set_names(self, p1, p2):
@@ -56,7 +58,6 @@ class GameState:
             self._finalize_ai_move(choice)
 
     def _ai_move_minimax(self):
-        """Smart AI using Minimax"""
         best_score = -float('inf')
         best_move = None
 
@@ -134,15 +135,13 @@ class GameState:
         StorageManager.record_result(self.p1_name, self.p2_name, real_winner_name)
 
     def check_win(self):
-        return self.check_win_simulation(self.board, self.board[0] if self.board[0] else "X")
+            for a, b, c in config.WINS:
+                if self.board[a] == self.board[b] == self.board[c] and self.board[a] != "":
+                    return True
+            return False
 
     def check_win_simulation(self, current_board, player_symbol):
-        wins = [
-            (0, 1, 2), (3, 4, 5), (6, 7, 8),
-            (0, 3, 6), (1, 4, 7), (2, 5, 8),
-            (0, 4, 8), (2, 4, 6)
-        ]
-        for a, b, c in wins:
+        for a, b, c in config.WINS:
             if current_board[a] == current_board[b] == current_board[c] == player_symbol:
                 return True
         return False

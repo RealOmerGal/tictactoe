@@ -41,9 +41,6 @@ def get_grid_index(x, y):
     return row * 3 + col
 
 def game_start():
-    view.draw_menu(game)
-    game.p1_name = view.ask_input("Name", "Enter Player 1 Name:")
-    game.p2_name = view.ask_input("Name", "Enter Player 2 Name:")
     view.draw_menu(game)  # Refresh to show new name
 
 def handle_click(x, y):
@@ -66,23 +63,27 @@ def handle_click(x, y):
                 view.draw_menu(game)
 
         elif btn == "pvp":
-            game.reset()  # Reset board
+            game.reset()
+            p1_name = view.ask_input("Name", "Enter Player 1 Name:")
+            p2_name = view.ask_input("Name", "Enter Player 2 Name:")
+            game.set_names(p1_name, p2_name)
             game.mode = config.MODE_PVP
-            # Keep the names user entered
             app_state = config.STATE_GAME
             view.draw_game(game)
 
         elif btn == "easy":
             game.reset()
             game.mode = config.MODE_EASY
-            game.p2_name = "Easy Bot"  # Force P2 name
+            p1_name = view.ask_input("Name", "Enter Player 1 Name:")
+            game.set_names(p1_name, "Easy Bot")
             app_state = config.STATE_GAME
             view.draw_game(game)
 
         elif btn == "hard":
             game.reset()
             game.mode = config.MODE_HARD
-            game.p2_name = "Hard Bot"  # Force P2 name
+            p1_name = view.ask_input("Name", "Enter Player 1 Name:")
+            game.set_names(p1_name, "Hard Bot")
             app_state = config.STATE_GAME
             view.draw_game(game)
 
