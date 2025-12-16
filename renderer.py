@@ -123,16 +123,34 @@ class Renderer:
         self.screen.update()
 
     def ask_input(self, title, prompt):
-        return self.screen.textinput(title, prompt)
+        res =  self.screen.textinput(title, prompt)
+        if(res):
+            return res.strip()
 
     def show_history_popup(self, text):
-        # Simple overlay for history
         self.pen.clear()
         self.pen.penup()
-        self.pen.goto(0, 250)
-        self.pen.write("Match History (Click to return)", align="center", font=("Arial", 16, "bold"))
-        self.pen.goto(0,50)
-        self.pen.write(text, align="center", font=("Courier", 10, "normal"))
+
+        self.pen.goto(0, 260)
+        self.pen.write(
+            "Match History (Click to return)",
+            align="center",
+            font=("Arial", 16, "bold")
+        )
+
+        y = 220
+        line_height = 18
+        lines = text.splitlines() if isinstance(text, str) else text
+
+        for line in lines:
+            self.pen.goto(0, y)
+            self.pen.write(
+                line,
+                align="center",
+                font=("Courier", 10, "normal")
+            )
+            y -= line_height
+
         self.screen.update()
 
     def _line(self, x1, y1, x2, y2):
