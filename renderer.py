@@ -19,7 +19,6 @@ class Renderer:
         self.pen.clear()
         self.screen.bgcolor(config.COLOR_BG)
 
-    # --- MENU VIEW ---
     def draw_menu(self, game_state):
         self.clear_screen()
 
@@ -67,7 +66,6 @@ class Renderer:
 
         self.screen.update()
 
-    # --- HELPERS ---
     def _draw_btn_rect(self, x, y, w, h, text):
         self.pen.color("black")
         self.pen.fillcolor(config.COLOR_BTN)
@@ -82,7 +80,6 @@ class Renderer:
             self.pen.left(90)
         self.pen.end_fill()
 
-        # Text centering
         self.pen.penup()
         self.pen.goto(x, y - 10)
         self.pen.color(config.COLOR_TEXT)

@@ -24,13 +24,11 @@ class GameState:
         self.p2_name = p2 or "Player 2"
 
     def make_move(self, index):
-        """Attempts to make a move at index (0-8)"""
         if not self._is_valid(index):
             return False
 
         self.board[index] = self.current_turn
 
-        # Check for Win/Draw immediately after human move
         if self.check_win():
             self._handle_end_game(winner_symbol=self.current_turn)
         elif "" not in self.board:
@@ -39,7 +37,6 @@ class GameState:
             self._switch_turn()
 
             # TRIGGER AI IF NEEDED
-            # Only if game isn't over and it's now O's turn
             if not self.game_over and self.current_turn == "O":
                 if self.mode == config.MODE_EASY:
                     self._ai_move_random()
@@ -48,10 +45,7 @@ class GameState:
 
         return True
 
-    # --- AI LOGIC ---
-
     def _ai_move_random(self):
-        """Original 'Dumb' AI"""
         empty_indices = [i for i, x in enumerate(self.board) if x == ""]
         if empty_indices:
             choice = random.choice(empty_indices)
@@ -61,7 +55,6 @@ class GameState:
         best_score = -float('inf')
         best_move = None
 
-        # Loop through all available spots
         for i in range(9):
             if self.board[i] == "":
                 self.board[i] = "O"  # Try move
@@ -76,7 +69,6 @@ class GameState:
             self._finalize_ai_move(best_move)
 
     def _finalize_ai_move(self, index):
-        """Apply the chosen AI move to the real board"""
         self.board[index] = "O"
         if self.check_win():
             self._handle_end_game(winner_symbol="O")
@@ -110,8 +102,6 @@ class GameState:
                     best_score = min(score, best_score)
             return best_score
 
-    # --- HELPERS ---
-
     def _is_valid(self, index):
         if self.game_over or index is None:
             return False
@@ -140,13 +130,13 @@ class GameState:
                     return True
             return False
 
-    def check_win_simulation(self, current_board, player_symbol):
+    @staticmethod
+    def check_win_simulation(current_board, player_symbol):
         for a, b, c in config.WINS:
             if current_board[a] == current_board[b] == current_board[c] == player_symbol:
                 return True
         return False
 
-    # --- STORAGE ---
 
     def save_game(self):
         return StorageManager.save_game_state(self)
@@ -158,6 +148,7 @@ class GameState:
             return True
         return False
 
-    def get_history_text(self):
+    @staticmethod
+    def get_history_text():
         lines = StorageManager.get_history()
         return "".join(lines) if lines else "No games recorded."
