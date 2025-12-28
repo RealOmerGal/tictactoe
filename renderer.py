@@ -1,7 +1,5 @@
-# renderer.py
 import turtle
 import config
-
 
 class Renderer:
     def __init__(self):
@@ -26,13 +24,8 @@ class Renderer:
         self.pen.penup()
         self.pen.goto(0, 200)
         self.pen.color("black")
-        self.pen.write("TIC TAC TOE", align="center", font=("Arial", 40, "bold"))
+        self.pen.write(config.TITLE, align="center", font=("Arial", 40, "bold"))
         self.pen.goto(0, 180)
-        self.pen.write("Click names to edit, then choose a mode", align="center", font=("Arial", 12, "italic"))
-
-        # Draw Inputs (visualized as buttons)
-        self._draw_btn_rect(*config.MENU_BTNS['p1_name'], f"Player 1: {game_state.p1_name}")
-        self._draw_btn_rect(*config.MENU_BTNS['p2_name'], f"Player 2: {game_state.p2_name}")
 
         # Draw Mode Buttons
         self._draw_btn_rect(*config.MENU_BTNS['pvp'], "Play PvP")
@@ -41,6 +34,7 @@ class Renderer:
 
         # Draw History
         self._draw_btn_rect(*config.MENU_BTNS['history'], "View History")
+        self._draw_btn_rect(*config.MENU_BTNS['load'], "Load Game")
 
         self.screen.update()
 
@@ -53,10 +47,12 @@ class Renderer:
         for key, val in config.GAME_BTNS.items():
             self._draw_btn_rect(*val, key.capitalize())
 
-        # Draw Board State
-        for i, symbol in enumerate(game_state.board):
-            if symbol != "":
-                self.draw_marker(i, symbol, update=False)
+        # Draw Board State (Iterate 2D array)
+        for r in range(3):
+            for c in range(3):
+                symbol = game_state.board[r][c]
+                if symbol != "":
+                    self.draw_marker(r, c, symbol, update=False)
 
         # Status Text
         self.pen.penup()
@@ -74,9 +70,9 @@ class Renderer:
         self.pen.pendown()
         self.pen.begin_fill()
         for _ in range(2):
-            self.pen.forward(w);
+            self.pen.forward(w)
             self.pen.left(90)
-            self.pen.forward(h);
+            self.pen.forward(h)
             self.pen.left(90)
         self.pen.end_fill()
 
@@ -87,16 +83,20 @@ class Renderer:
 
     def _draw_grid(self):
         self.pen.color(config.COLOR_LINE)
+        # Offset matches the coordinate logic in draw_marker
         offset_x = -100
+        # Vertical lines
         self._line(offset_x - 100, 300, offset_x - 100, -300)
         self._line(offset_x + 100, 300, offset_x + 100, -300)
+        # Horizontal lines
         self._line(offset_x - 300, 100, offset_x + 300, 100)
         self._line(offset_x - 300, -100, offset_x + 300, -100)
 
-    def draw_marker(self, index, player, update=True):
-        row = index // 3
-        col = index % 3
+    def draw_marker(self, row, col, player, update=True):
+        # Calculate visual coordinates based on row/col
+        # Cols: 0=-300, 1=-100, 2=100
         x = -300 + (col * 200)
+        # Rows: 0=200, 1=0, 2=-200
         y = 200 - (row * 200)
 
         if player == "X":
@@ -113,15 +113,12 @@ class Renderer:
         if update: self.screen.update()
 
     def show_message(self, text):
-        self.pen.penup()
-        self.pen.goto(0, 0)
-        self.pen.color("green")
-        self.pen.write(text, align="center", font=("Arial", 40, "bold"))
-        self.screen.update()
+        # Could swap into UI message
+        print(text)
 
     def ask_input(self, title, prompt):
-        res =  self.screen.textinput(title, prompt)
-        if(res):
+        res = self.screen.textinput(title, prompt)
+        if res:
             return res.strip()
 
     def show_history_popup(self, text):

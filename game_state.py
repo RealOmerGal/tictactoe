@@ -1,151 +1,135 @@
-# game_state.py
 import random
 from storage import StorageManager
 import config
 
 
-
 class GameState:
-
     def __init__(self):
         self.reset()
 
     def reset(self):
-        self.board = [""] * 9
+        # 0-based 3x3 grid
+        self.board = [["" for _ in range(3)] for _ in range(3)]
         self.current_turn = "X"
         self.game_over = False
         self.winner = None
         self.p1_name = None
         self.p2_name = None
-        self.mode = config.MODE_PVP  # Default
+        self.mode = config.MODE_PVP
 
     def set_names(self, p1, p2):
         self.p1_name = p1 or "Player 1"
         self.p2_name = p2 or "Player 2"
 
-    def make_move(self, index):
-        if not self._is_valid(index):
+    def make_move(self, row, col):
+        if not self._is_valid(row, col):
             return False
 
-        self.board[index] = self.current_turn
+        self.board[row][col] = self.current_turn
 
         if self.check_win():
             self._handle_end_game(winner_symbol=self.current_turn)
-        elif "" not in self.board:
+        elif self._is_board_full():
             self._handle_end_game(winner_symbol="Draw")
         else:
             self._switch_turn()
-
-            # TRIGGER AI IF NEEDED
             if not self.game_over and self.current_turn == "O":
                 if self.mode == config.MODE_EASY:
                     self._ai_move_random()
                 elif self.mode == config.MODE_HARD:
                     self._ai_move_minimax()
-
         return True
 
+    def _is_valid(self, row, col):
+        if self.game_over: return False
+        # Validates 0-2
+        if 0 <= row < 3 and 0 <= col < 3 and self.board[row][col] == "":
+            return True
+        return False
+
+    # --- AI & WIN LOGIC ---
     def _ai_move_random(self):
-        empty_indices = [i for i, x in enumerate(self.board) if x == ""]
-        if empty_indices:
-            choice = random.choice(empty_indices)
-            self._finalize_ai_move(choice)
+        empty = [(r, c) for r in range(3) for c in range(3) if self.board[r][c] == ""]
+        if empty:
+            r, c = random.choice(empty)
+            self._finalize_ai_move(r, c)
 
     def _ai_move_minimax(self):
         best_score = -float('inf')
         best_move = None
+        for r in range(3):
+            for c in range(3):
+                if self.board[r][c] == "":
+                    self.board[r][c] = "O"
+                    score = self._minimax(self.board, 0, False)
+                    self.board[r][c] = ""
+                    if score > best_score:
+                        best_score = score
+                        best_move = (r, c)
+        if best_move:
+            self._finalize_ai_move(*best_move)
 
-        for i in range(9):
-            if self.board[i] == "":
-                self.board[i] = "O"  # Try move
-                score = self._minimax(self.board, 0, False)  # Calc score
-                self.board[i] = ""  # Undo move
-
-                if score > best_score:
-                    best_score = score
-                    best_move = i
-
-        if best_move is not None:
-            self._finalize_ai_move(best_move)
-
-    def _finalize_ai_move(self, index):
-        self.board[index] = "O"
+    def _finalize_ai_move(self, r, c):
+        self.board[r][c] = "O"
         if self.check_win():
-            self._handle_end_game(winner_symbol="O")
-        elif "" not in self.board:
-            self._handle_end_game(winner_symbol="Draw")
+            self._handle_end_game("O")
+        elif self._is_board_full():
+            self._handle_end_game("Draw")
         else:
             self._switch_turn()
 
-    def _minimax(self, board, depth, is_maximizing):
-        """Recursive score calculation"""
-        if self.check_win_simulation(board, "O"): return 10 - depth
-        if self.check_win_simulation(board, "X"): return -10 + depth
-        if "" not in board: return 0
+    def _minimax(self, board, depth, is_max):
+        if self.check_win_sim(board, "O"): return 10 - depth
+        if self.check_win_sim(board, "X"): return -10 + depth
+        if self._is_full_sim(board): return 0
 
-        if is_maximizing:
-            best_score = -float('inf')
-            for i in range(9):
-                if board[i] == "":
-                    board[i] = "O"
-                    score = self._minimax(board, depth + 1, False)
-                    board[i] = ""
-                    best_score = max(score, best_score)
-            return best_score
-        else:
-            best_score = float('inf')
-            for i in range(9):
-                if board[i] == "":
-                    board[i] = "X"
-                    score = self._minimax(board, depth + 1, True)
-                    board[i] = ""
-                    best_score = min(score, best_score)
-            return best_score
+        best = -float('inf') if is_max else float('inf')
+        func = max if is_max else min
+        p = "O" if is_max else "X"
 
-    def _is_valid(self, index):
-        if self.game_over or index is None:
-            return False
-        if 0 <= index < 9 and self.board[index] == "":
-            return True
-        return False
+        for r in range(3):
+            for c in range(3):
+                if board[r][c] == "":
+                    board[r][c] = p
+                    score = self._minimax(board, depth + 1, not is_max)
+                    board[r][c] = ""
+                    best = func(score, best)
+        return best
 
     def _switch_turn(self):
         self.current_turn = "O" if self.current_turn == "X" else "X"
 
     def _handle_end_game(self, winner_symbol):
         self.game_over = True
-
-        if winner_symbol == "Draw":
-            self.winner = "Draw"
-            real_winner_name = "Draw"
-        else:
-            self.winner = winner_symbol
-            real_winner_name = self.p1_name if winner_symbol == "X" else self.p2_name
-
-        StorageManager.record_result(self.p1_name, self.p2_name, real_winner_name)
+        self.winner = winner_symbol
+        name = "Draw" if winner_symbol == "Draw" else (self.p1_name if winner_symbol == "X" else self.p2_name)
+        StorageManager.record_result(self.p1_name, self.p2_name, name)
 
     def check_win(self):
-            for a, b, c in config.WINS:
-                if self.board[a] == self.board[b] == self.board[c] and self.board[a] != "":
-                    return True
-            return False
+        return self.check_win_sim(self.board, self.current_turn)
 
-    @staticmethod
-    def check_win_simulation(current_board, player_symbol):
-        for a, b, c in config.WINS:
-            if current_board[a] == current_board[b] == current_board[c] == player_symbol:
-                return True
+    def check_win_sim(self, b, p):
+        # Rows & Cols
+        for i in range(3):
+            if b[i][0] == b[i][1] == b[i][2] == p: return True
+            if b[0][i] == b[1][i] == b[2][i] == p: return True
+        # Diagonals
+        if b[0][0] == b[1][1] == b[2][2] == p: return True
+        if b[0][2] == b[1][1] == b[2][0] == p: return True
         return False
 
+    def _is_board_full(self):
+        return self._is_full_sim(self.board)
+
+    def _is_full_sim(self, b):
+        return all(c != "" for r in b for c in r)
 
     def save_game(self):
         return StorageManager.save_game_state(self)
 
     def load_game(self):
-        loaded_state = StorageManager.load_game_state()
-        if loaded_state:
-            self.__dict__.update(loaded_state.__dict__)
-            return True
+        s = StorageManager.load_game_state()
+        if s: self.__dict__.update(s.__dict__); return True
         return False
 
     @staticmethod

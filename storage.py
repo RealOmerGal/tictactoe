@@ -1,4 +1,3 @@
-# storage.py
 import pickle
 import os
 import config
@@ -28,7 +27,6 @@ class StorageManager:
 
     @staticmethod
     def record_result(p1, p2, winner):
-        # Format: gamer1_name,gamer2_name,winner_name
         line = f"{p1},{p2},{winner}\n"
         with open(config.HISTORY_FILE, "a") as f:
             f.write(line)
